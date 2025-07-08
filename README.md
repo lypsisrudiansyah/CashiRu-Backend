@@ -42,9 +42,8 @@ This project is a backend API built with Laravel, designed for a Point of Sale (
     php artisan migrate
     ```
 
-6. (Optional) Install Filament Admin Panel:
+6. Install Filament Admin Panel:
     ```
-    composer require filament/filament
     php artisan filament:install
     ```
 
