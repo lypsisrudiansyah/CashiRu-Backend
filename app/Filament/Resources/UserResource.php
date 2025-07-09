@@ -45,7 +45,10 @@ class UserResource extends Resource
                     ->default(null),
                 Forms\Components\TextInput::make('password')
                     ->password()
-                    ->required()
+                    // ->required()
+                    // ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
+                    ->required(fn ($component) => is_null($component->getRecord()))
+                    ->dehydrated(fn ($state) => filled($state))
                     ->maxLength(255),
             ]);
     }
@@ -78,12 +81,17 @@ class UserResource extends Resource
 
     public static function beforeSave($record, $data): void
     {
-        // if (!empty($data['password'])) {
-        //     $record->password = bcrypt($data['password']);
-        // } else {
-        //     // not replacing current password if its empty
-        //     unset($record->password);
-        // }
+        dd("asdasd");
+        // Hanya update password kalau ada input
+        if (!empty($data['password'])) {
+            $record->password = bcrypt($data['password']);
+        }
+
+        // Hapus password dari data agar tidak ikut fill() sebagai null
+        unset($data['password']);
+
+        // Sekarang aman untuk mass-assign data lain
+        $record->fill($data);
     }
 
     public static function getRelations(): array
