@@ -37,7 +37,7 @@ class ProductResource extends Resource
                 TextInput::make('price')
                     ->required()
                     ->numeric()
-                    ->prefix('$'),
+                    ->prefix('Rp'),
                 Select::make('category_id')
                     ->label('Category')
                     ->options(
@@ -60,8 +60,9 @@ class ProductResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('price')
-                    ->money()
-                    ->sortable(),
+                    ->numeric()
+                    ->sortable()
+                    ->formatStateUsing(fn ($state) => number_format($state, 0, ',', '.')),
                 TextColumn::make('category_id')
                     ->numeric()
                     ->sortable(),
