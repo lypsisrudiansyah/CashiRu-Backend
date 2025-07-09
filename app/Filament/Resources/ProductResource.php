@@ -4,9 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use App\Models\Category;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -32,24 +34,28 @@ class ProductResource extends Resource
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Textarea::make('description')
-                    ->columnSpanFull(),
+                Select::make('category_id')
+                    ->label('Category')
+                    ->options(
+                        Category::all()->pluck('name', 'id')
+                    )->required()
+                    ->searchable(),
                 TextInput::make('price')
                     ->required()
                     ->numeric()
                     ->prefix('Rp'),
-                Select::make('category_id')
-                    ->label('Category')
-                    ->options(
-                        \App\Models\Category::all()->pluck('name', 'id')
-                    )->required()
-                    ->searchable(),
-                FileUpload::make('image')
-                    ->image(),
                 TextInput::make('stock')
                     ->required()
                     ->numeric()
                     ->default(0),
+                Grid::make(12)->schema([
+                    FileUpload::make('image')
+                        ->image()
+                        ->columnSpan(6),
+                    Textarea::make('description')
+                        ->columnSpan(6),
+                ])
+
             ]);
     }
 
@@ -63,9 +69,11 @@ class ProductResource extends Resource
                     ->numeric()
                     ->sortable()
                     ->formatStateUsing(fn ($state) => number_format($state, 0, ',', '.')),
-                TextColumn::make('category_id')
-                    ->numeric()
-                    ->sortable(),
+                // TextColumn::make('category_id')
+                //     ->numeric()
+                //     ->sortable(),
+                TextColumn::make('category.name')
+                    ->label('Category'),
                 ImageColumn::make('image'),
                 TextColumn::make('stock')
                     ->numeric()
