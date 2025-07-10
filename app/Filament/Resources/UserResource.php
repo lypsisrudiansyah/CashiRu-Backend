@@ -81,17 +81,6 @@ class UserResource extends Resource
 
     public static function beforeSave($record, $data): void
     {
-        dd("asdasd");
-        // Hanya update password kalau ada input
-        if (!empty($data['password'])) {
-            $record->password = bcrypt($data['password']);
-        }
-
-        // Hapus password dari data agar tidak ikut fill() sebagai null
-        unset($data['password']);
-
-        // Sekarang aman untuk mass-assign data lain
-        $record->fill($data);
     }
 
     public static function getRelations(): array
