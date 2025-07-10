@@ -29,10 +29,12 @@ class AuthControllerTest extends TestCase
             'password' => bcrypt('secret123'),
         ]);
 
+        // * Simulated HTTP Request
         // $request = Request::create('/api/login', 'POST', [
         //     'email' => 'rudi@example.com',
         //     'password' => 'secret123',
         // ]);
+        // * Plain Request
         $request = new Request([
             'email' => 'rudi@example.com',
             'password' => 'secret123',
