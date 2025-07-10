@@ -2,6 +2,13 @@
 
 This project is a backend API built with Laravel, designed for a Point of Sale (POS) or cashier mobile application developed in Flutter. It also includes an admin panel powered by Filament for easy management.
 
+## Previews
+![CashiRu Admin Panel](https://github.com/user-attachments/assets/f6b94e48-b336-46b2-a8cd-0d8e4a13621c)
+
+## Automated Testing
+![image](https://github.com/user-attachments/assets/959a031d-f0a2-4540-943e-12a724ecbca2)
+
+
 ## Features
 
 - RESTful API for POS/Cashier mobile apps (Flutter)
