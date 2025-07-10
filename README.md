@@ -6,7 +6,8 @@ This project is a backend API built with Laravel, designed for a Point of Sale (
 ![CashiRu Admin Panel](https://github.com/user-attachments/assets/f6b94e48-b336-46b2-a8cd-0d8e4a13621c)
 
 ## Automated Testing
-![image](https://github.com/user-attachments/assets/959a031d-f0a2-4540-943e-12a724ecbca2)
+<img width="285" height="246" alt="image" src="https://github.com/user-attachments/assets/c6ed2383-f3cb-425d-aea4-b5dc236837a9" />
+
 
 
 ## Features
