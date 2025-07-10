@@ -9,6 +9,14 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    public function index(Request $request)
+    {
+        $orders = Order::with('order_items.product')->get();
+        return response()->json([
+            'data' => $orders,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -27,5 +35,20 @@ class OrderController extends Controller
             'total_quantity' => collect($validatedData['items'])->sum('quantity'),
             'payment_method' => $request->input('payment_method', 'cash'), // Default set to 'cash'
         ]);
+
+        foreach ($validatedData['items'] as $item) {
+            $product = Product::find($item['product_id']);
+            $order->orderItems()->create([
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'total_item' => $product->price * $item['quantity'],
+                'product_price' => $product->price,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Order created successfully',
+            'data' => $order->load('order_items.product'),
+        ], 201);
     }
 }

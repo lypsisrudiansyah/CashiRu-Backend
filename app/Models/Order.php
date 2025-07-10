@@ -11,6 +11,13 @@ class Order extends Model
     use HasFactory, SoftDeletes;
 
     /* payment_method : cash, credit_card, etc. */
+    protected $fillable = [
+        'transaction_number',
+        'cashier_id',
+        'total_price',
+        'total_item',
+        'payment_method',
+    ];
 
     public function cashier()
     {
