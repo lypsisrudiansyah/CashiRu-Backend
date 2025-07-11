@@ -14,7 +14,7 @@ class Order extends Model
     protected $fillable = [
         'transaction_number',
         'cashier_id',
-        'total_price',
+        'total',
         'total_item',
         'payment_method',
     ];
