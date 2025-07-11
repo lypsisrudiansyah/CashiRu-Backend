@@ -26,10 +26,9 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login successful',
-            'access_token' => $accessToken,
+            'token' => $accessToken,
             'user' => $user,
         ]);
-
     }
 
     public function logout(Request $request)

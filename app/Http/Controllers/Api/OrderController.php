@@ -38,7 +38,7 @@ class OrderController extends Controller
 
         foreach ($validatedData['items'] as $item) {
             $product = Product::find($item['product_id']);
-            $order->orderItems()->create([
+            $order->order_items()->create([
                 'product_id' => $item['product_id'],
                 'quantity' => $item['quantity'],
                 'total_item' => $product->price * $item['quantity'],
