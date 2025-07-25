@@ -65,6 +65,8 @@ This project is a backend API built with Laravel, designed for a Point of Sale (
 - Use the provided API endpoints in your Flutter mobile app for POS operations.
 - Access the admin panel at `/admin` for management tasks.
 
+### Open to full-time roles, freelance projects, or job opportunities, feel free to reach out via email: rudiansyahether@gmail.com
+
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
