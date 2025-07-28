@@ -29,7 +29,7 @@ This project is a backend API built with Laravel, designed for a Point of Sale (
 
 1. Clone the repository:
     ```
-    git clone https://github.com/yourusername/your-repo.git
+    git clone https://github.com/lypsisrudiansyah/CashiRu-Backend.git
     cd your-repo
     ```
 
