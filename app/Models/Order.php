@@ -17,6 +17,7 @@ class Order extends Model
         'total',
         'total_item',
         'payment_method',
+        'total_quantity',
     ];
 
     public function cashier()

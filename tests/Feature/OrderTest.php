@@ -37,7 +37,7 @@ class OrderTest extends TestCase
                 'message' => 'Order created successfully',
             ])
             ->assertJsonPath('data.total', 350)
-            ->assertJsonPath('data.total_quantity', 5)
+            ->assertJsonPath('data.total_quantity', 5) // this null, error because not fillable
             ->assertJsonPath('data.cashier_id', $user->id);
 
         $order = Order::latest()->first();
@@ -45,7 +45,7 @@ class OrderTest extends TestCase
         $this->assertDatabaseHas('orders', [
             'cashier_id' => $user->id,
             'total' => 350.00,
-            'total_quantity' => 5,
+            'total_quantity' => 5, // this 0, error because not fillable
         ]);
 
         $this->assertDatabaseHas('order_items', ['product_id' => $product1->id, 'quantity' => 2]);
