@@ -37,19 +37,38 @@ class OrderTest extends TestCase
                 'message' => 'Order created successfully',
             ])
             ->assertJsonPath('data.total', 350)
-            ->assertJsonPath('data.total_quantity', 5) // this null, error because not fillable
-            ->assertJsonPath('data.cashier_id', $user->id);
+            ->assertJsonPath('data.total_quantity', 5)
+            ->assertJsonPath('data.cashier_id', $user->id)
+            ->assertJsonPath('data.order_items.0.product_id', $product1->id)
+            ->assertJsonPath('data.order_items.0.quantity', 2)
+            ->assertJsonPath('data.order_items.0.total_item', 200)
+            ->assertJsonPath('data.order_items.0.product_price', 100)
+            ->assertJsonPath('data.order_items.1.product_id', $product2->id)
+            ->assertJsonPath('data.order_items.1.quantity', 3)
+            ->assertJsonPath('data.order_items.1.total_item', 150)
+            ->assertJsonPath('data.order_items.1.product_price', 50);
 
-        $order = Order::latest()->first();
-        info($order->toArray());
         $this->assertDatabaseHas('orders', [
             'cashier_id' => $user->id,
             'total' => 350.00,
-            'total_quantity' => 5, // this 0, error because not fillable
+            'total_quantity' => 5,
+            'payment_method' => 'cash',
         ]);
 
-        $this->assertDatabaseHas('order_items', ['product_id' => $product1->id, 'quantity' => 2]);
-        $this->assertDatabaseHas('order_items', ['product_id' => $product2->id, 'quantity' => 3]);
+        $this->assertDatabaseHas('order_items', [
+            'order_id' => Order::latest()->first()->id,
+            'product_id' => $product1->id,
+            'quantity' => 2,
+            'total_item' => 200,
+            'product_price' => 100,
+        ]);
+        $this->assertDatabaseHas('order_items', [
+            'order_id' => Order::latest()->first()->id,
+            'product_id' => $product2->id,
+            'quantity' => 3,
+            'total_item' => 150,
+            'product_price' => 50,
+        ]);
     }
 
     public function test_unauthenticated_user_cannot_create_an_order()
