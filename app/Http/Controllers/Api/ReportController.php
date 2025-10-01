@@ -65,7 +65,7 @@ class ReportController extends Controller
 
         $start_date = date('Y-m-d 00:00:00', strtotime($request->start_date));
         $end_date = date('Y-m-d 23:59:59', strtotime($request->end_date));
-
+        // dd($start_date, $end_date);
         $totalProductSold = OrderItem::select(
             'products.id as product_id',
             'products.name as product_name',
@@ -73,7 +73,7 @@ class ReportController extends Controller
             DB::raw('SUM(order_items.quantity) as total_quantity'),
             DB::raw('SUM(order_items.total_item) as total_item')
         )->join('products', 'order_items.product_id', '=', 'products.id')
-            ->whereBetween(DB::raw('DATE(order_items.created_at)'), [$start_date, $end_date])
+            ->whereBetween(DB::raw('(order_items.created_at)'), [$start_date, $end_date])
             ->groupBy('products.id', 'products.name', 'products.price')
             ->orderBy('total_quantity', 'desc')
             ->get();
