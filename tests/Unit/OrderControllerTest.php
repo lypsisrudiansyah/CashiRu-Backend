@@ -248,5 +248,233 @@ class OrderControllerTest extends TestCase
         ]);
     }
 
+    /**
+     * @test
+     * @group order-creation
+     * @group happy-path
+     */
+    public function test_order_creation_uses_default_payment_method_when_not_provided()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['price' => 100, 'stock' => 10]);
+        $orderData = [
+            'cashier_id' => $user->id,
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(201)
+            ->assertJsonPath('data.payment_method', 'cash');
+
+        $this->assertDatabaseHas('orders', [
+            'cashier_id' => $user->id,
+            'payment_method' => 'cash',
+        ]);
+    }
+
+    /**
+     * @test
+     * @group order-creation
+     * @group happy-path
+     */
+    public function test_order_creation_uses_specified_payment_method()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['price' => 100, 'stock' => 10]);
+        $orderData = [
+            'cashier_id' => $user->id,
+            'payment_method' => 'credit_card',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(201)
+            ->assertJsonPath('data.payment_method', 'credit_card');
+
+        $this->assertDatabaseHas('orders', [
+            'cashier_id' => $user->id,
+            'payment_method' => 'credit_card',
+        ]);
+    }
+
+    /**
+     * @test
+     * @group order-creation
+     * @group validation
+     */
+    public function test_order_creation_fails_if_cashier_id_is_missing()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['price' => 100, 'stock' => 10]);
+        $orderData = [
+            // 'cashier_id' is missing
+            'payment_method' => 'cash',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['cashier_id']);
+    }
+
+    /**
+     * @test
+     * @group order-creation
+     * @group validation
+     */
+    public function test_order_creation_fails_if_cashier_id_does_not_exist_in_users_table()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
+        $orderData = [
+            'cashier_id' => 999, // Non-existent user ID
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['cashier_id']);
+    }
+
+    /**
+     * @test
+     * @group order-creation
+     * @group validation
+     */
+    public function test_order_creation_fails_if_items_field_is_missing()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $orderData = [
+            'cashier_id' => $user->id,
+            // 'items' field is missing
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items']);
+    }
+
+    /**
+     * @test
+     * @group order-creation
+     * @group validation
+     */
+    public function test_order_creation_fails_if_items_is_not_an_array()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $orderData = [
+            'cashier_id' => $user->id,
+            'items' => 'not-an-array',
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items']);
+    }
+
+    /**
+     * @test
+     * @group order-creation
+     * @group validation
+     */
+    public function test_order_creation_fails_if_items_array_is_empty()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $orderData = [
+            'cashier_id' => $user->id,
+            'items' => [], // Empty array
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items']);
+    }
+
+    /**
+     * @test
+     * @group order-creation
+     * @group validation
+     */
+    public function test_order_creation_fails_if_an_item_is_missing_product_id()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $orderData = [
+            'cashier_id' => $user->id,
+            'items' => [
+                ['quantity' => 1], // Missing 'product_id'
+            ],
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.product_id']);
+    }
+
+    /**
+     * @test
+     * @group order-creation
+     * @group validation
+     */
+    public function test_order_creation_fails_if_duplicate_product_ids_are_in_items()
+    {
+        // Arrange
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
+        $orderData = [
+            'cashier_id' => $user->id,
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+                ['product_id' => $product->id, 'quantity' => 2], // Duplicate product_id
+            ],
+        ];
+
+        // Act
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', $orderData);
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.1.product_id']);
+    }
+
     // ... The rest of the tests from your list would follow a similar pattern ...
 }

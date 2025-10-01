@@ -20,9 +20,9 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'cashier_id' => 'required',
+            'cashier_id' => 'required|exists:users,id',
             'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'required|exists:products,id|distinct',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
