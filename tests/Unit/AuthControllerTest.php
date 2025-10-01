@@ -42,7 +42,7 @@ class AuthControllerTest extends TestCase
         $response = $this->controller->login($request);
 
         $this->assertEquals(200, $response->status());
-        $this->assertArrayHasKey('access_token', $response->getData(true));
+        $this->assertArrayHasKey('token', $response->getData(true));
         $this->assertArrayHasKey('user', $response->getData(true));
     }
 
