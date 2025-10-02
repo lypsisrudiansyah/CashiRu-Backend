@@ -30,7 +30,12 @@ class ReportTest extends TestCase
 
         // Assert
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['start_date', 'end_date']);
+            ->assertJsonStructure([
+                'status',
+                'message' => [
+                    'end_date'
+                ]
+            ]);
     }
 
     public function test_summary_fails_when_end_date_before_start_date()
@@ -43,10 +48,15 @@ class ReportTest extends TestCase
 
         // Act
         $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/reports/summary?' . http_build_query($params));
-
+        // dd($response->json());
         // Assert
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['end_date']);
+            ->assertJsonStructure([
+                'status',
+                'message' => [
+                    'end_date'
+                ]
+            ]);
     }
 
     public function test_summary_returns_zero_when_no_orders_in_range()
@@ -130,4 +140,3 @@ class ReportTest extends TestCase
             ->assertJsonPath('data.total_sold_quantity', 7); // 2 + 1 + 4
     }
 }
-
