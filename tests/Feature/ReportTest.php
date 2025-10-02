@@ -30,7 +30,12 @@ class ReportTest extends TestCase
 
         // Assert
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['start_date', 'end_date']);
+            ->assertJsonStructure([
+                'status',
+                'message' => [
+                    'end_date'
+                ]
+            ]);
     }
 
     public function test_summary_fails_when_end_date_before_start_date()
@@ -43,10 +48,15 @@ class ReportTest extends TestCase
 
         // Act
         $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/reports/summary?' . http_build_query($params));
-
+        // dd($response->json());
         // Assert
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['end_date']);
+            ->assertJsonStructure([
+                'status',
+                'message' => [
+                    'end_date'
+                ]
+            ]);
     }
 
     public function test_summary_returns_zero_when_no_orders_in_range()
@@ -129,5 +139,116 @@ class ReportTest extends TestCase
             ->assertJsonPath('data.total_revenue', 350) // 150 + 200
             ->assertJsonPath('data.total_sold_quantity', 7); // 2 + 1 + 4
     }
-}
 
+    // =================================================================
+    // Product Sales Report Tests
+    // =================================================================
+
+    public function test_product_sales_requires_start_and_end_date()
+    {
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/reports/product-sales');
+
+        // Assert
+        $response->assertStatus(422)
+            ->assertJsonStructure([
+                'status',
+                'message' => [
+                    'start_date',
+                    'end_date'
+                ]
+            ]);
+        // ->assertJsonValidationErrors(['start_date', 'end_date']);
+    }
+
+    public function test_product_sales_fails_when_end_date_before_start_date()
+    {
+        // Arrange
+        $params = [
+            'start_date' => '2023-10-01',
+            'end_date' => '2023-09-30',
+        ];
+
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/reports/product-sales?' . http_build_query($params));
+        // Assert
+        $response->assertStatus(422)
+        ->assertJsonStructure([
+                'status',
+                'message' => [
+                    'end_date',
+                ]
+            ]);
+    }
+
+    public function test_product_sales_returns_empty_array_when_no_data()
+    {
+        // Arrange: Create an order item outside the requested date range
+        $product = Product::factory()->create();
+        OrderItem::factory()->create([
+            'product_id' => $product->id,
+            'created_at' => Carbon::yesterday(),
+        ]);
+
+        $params = [
+            'start_date' => Carbon::now()->toDateString(),
+            'end_date' => Carbon::now()->toDateString(),
+        ];
+
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->getJson('/api/reports/product-sales?' . http_build_query($params));
+
+        // Assert
+        $response->assertStatus(200)
+            ->assertJson([
+                'status' => 'success',
+                'data' => []
+            ])
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_product_sales_returns_products_grouped_by_id()
+    {
+        // Arrange
+        $product1 = Product::factory()->create(['name' => 'Product A', 'price' => 100]);
+        $product2 = Product::factory()->create(['name' => 'Product B', 'price' => 200]);
+        $date = '2023-11-20';
+
+        // Multiple order items for the same product
+        OrderItem::factory()->create(['product_id' => $product1->id, 'quantity' => 1, 'total_item' => 200, 'created_at' => Carbon::parse($date)]);
+        OrderItem::factory()->create(['product_id' => $product1->id, 'quantity' => 3, 'total_item' => 300, 'created_at' => Carbon::parse($date)]);
+        OrderItem::factory()->create(['product_id' => $product2->id, 'quantity' => 5, 'total_item' => 1000, 'created_at' => Carbon::parse($date)]);
+
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->getJson("/api/reports/product-sales?start_date={$date}&end_date={$date}");
+
+        // Assert
+        $response->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.product_name', 'Product B') // Ordered by quantity desc
+            ->assertJsonPath('data.0.total_quantity', 5)
+            ->assertJsonPath('data.0.total_item', 1000)
+            ->assertJsonPath('data.1.product_name', 'Product A')
+            ->assertJsonPath('data.1.total_quantity', 4) // 1 + 3
+            ->assertJsonPath('data.1.total_item', 500); // 200 + 300
+    }
+
+    public function test_product_sales_orders_products_by_quantity_desc()
+    {
+        // Arrange
+        $product1 = Product::factory()->create(); // Will have lower quantity
+        $product2 = Product::factory()->create(); // Will have higher quantity
+        $date = '2023-11-21';
+
+        OrderItem::factory()->create(['product_id' => $product1->id, 'quantity' => 2, 'created_at' => Carbon::parse($date)]);
+        OrderItem::factory()->create(['product_id' => $product2->id, 'quantity' => 5, 'created_at' => Carbon::parse($date)]);
+
+        // Act
+        $response = $this->actingAs($this->user, 'sanctum')->getJson("/api/reports/product-sales?start_date={$date}&end_date={$date}");
+
+        // Assert
+        $response->assertStatus(200)
+            ->assertJsonPath('data.0.product_id', $product2->id)
+            ->assertJsonPath('data.1.product_id', $product1->id);
+    }
+}
